@@ -14,10 +14,10 @@ class Player21:
 		if old_move[0]==-1 and old_move[1]==-1:
 			return (4,4)
 
-		cells=get_valid_moves(temp_board,temp_block,old_move,flag)
+		cells=self.get_valid_moves(temp_board,temp_block,old_move,flag)
 
 	def get_valid_moves(self,temp_board,temp_block,old_move,flag):
-		blocks=get_valid_blocks(temp_block,old_move)
+		blocks=self.get_valid_blocks(temp_block,old_move)
 		if len(blocks)==0:
 			for i in range(9):
 				if temp_block[i]!='-':
@@ -26,7 +26,7 @@ class Player21:
 
 		cells=[]
 		for i in blocks:
-			cells.append(get_valid_cells(temp_board,i,flag))
+			cells.append(self.get_valid_cells(temp_board,i,flag))
 
 		if len(cells)!=0:
 			return (cells[0][0],cells[0][1])
@@ -34,7 +34,7 @@ class Player21:
 		else:
 			cells=[]
 			for i in blocks:
-				temp=get_empty_cells(temp_board,i);
+				temp=self.get_empty_cells(temp_board,i);
 				if temp[0]!=-1 and temp[1]!=-1:
 					cells.append(temp)
 
@@ -84,7 +84,7 @@ class Player21:
 			for k in range (index_y*3,index_y*3+3):
 				cell_seq.append(temp_board[j][k])
 
-			ans=get_win_move(cell_seq,flag)
+			ans=self.get_win_move(cell_seq,flag)
 			if ans!=-1:
 				return (j,index_y*3+ans)
 			cell_seq=[]
@@ -93,7 +93,7 @@ class Player21:
 		for k in range (index_y*3,index_y*3+3):
 			for j in range(index_x*3, index_x*3+3):
 				cell_seq.append(temp_board[j][k])
-			ans=get_win_move(cell_seq,flag)
+			ans=self.get_win_move(cell_seq,flag)
 			if ans!=-1:
 				return (index_x*3+ans,k)
 			cell_seq=[]	
@@ -102,7 +102,7 @@ class Player21:
 		for j in range (3):
 			cell_seq.append(temp_board[index_x+j][index_y+j])
 
-		ans=get_win_move(cell_seq,flag)
+		ans=self.get_win_move(cell_seq,flag)
 		if ans!=-1:
 			return (index_x+ans,index_y+ans)
 
@@ -112,7 +112,7 @@ class Player21:
 		for j in range(3):
 			cell_seq.append(index_x*3+j,index_y*3-j)
 
-		ans=get_win_move(cell_seq,flag)
+		ans=self.get_win_move(cell_seq,flag)
 		if ans!=-1:
 			return (index_x+ans,index_y-ans)
 
@@ -123,13 +123,13 @@ class Player21:
 
 
 	def get_win_move(self, tup,flag):
-		if tup[0]==tup[1] and tup[0]==flag:
+		if tup[0]==tup[1] and tup[2]=='-' and tup[0]==flag:
 			return 2
 
-		elif tup[0]==tup[2] and tup[0]==flag:
+		elif tup[0]==tup[2] and tup[1]=='-' and tup[0]==flag:
 			return 1
 
-		elif tup[1]==tup[2] and tup[1]==flag:
+		elif tup[1]==tup[2] and tup[0]=='-' and tup[1]==flag:
 			return 0
 
 		else :
