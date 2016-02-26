@@ -15,12 +15,13 @@ class Player21:
 			return (4,4)
 
 		cells=self.get_valid_moves(temp_board,temp_block,old_move,flag)
+		return (cells[0],cells[1])
 
 	def get_valid_moves(self,temp_board,temp_block,old_move,flag):
 		blocks=self.get_valid_blocks(temp_block,old_move)
 		if len(blocks)==0:
 			for i in range(9):
-				if temp_block[i]!='-':
+				if temp_block[i]=='-':
 					blocks.append(i)
 
 
@@ -28,15 +29,21 @@ class Player21:
 		for i in blocks:
 			cells.append(self.get_valid_cells(temp_board,i,flag))
 
-		if len(cells)!=0:
-			return (cells[0][0],cells[0][1])
+		valid_cells=[]
+		for i in cells:
+			if i[0]!=-1 and i[1]!=-1:
+				valid_cells.append(i)
+
+		if len(valid_cells)!=0:
+			print valid_cells
+			return (valid_cells[0][0],valid_cells[0][1])
 
 		else:
 			cells=[]
 			for i in blocks:
 				temp=self.get_empty_cells(temp_board,i);
 				if temp[0]!=-1 and temp[1]!=-1:
-					cells.append(temp)
+					return(temp)
 
 
 	def get_empty_cells(self,temp_board,i):
@@ -100,27 +107,23 @@ class Player21:
 
 		#checking major diagonal
 		for j in range (3):
-			cell_seq.append(temp_board[index_x+j][index_y+j])
+			cell_seq.append(temp_board[index_x*3+j][index_y*3+j])
 
 		ans=self.get_win_move(cell_seq,flag)
 		if ans!=-1:
-			return (index_x+ans,index_y+ans)
+			return (index_x*3+ans,index_y*3+ans)
 
 
 		#checking minor diagonal
 		cell_seq=[]
 		for j in range(3):
-			cell_seq.append(index_x*3+j,index_y*3-j)
+			cell_seq.append(temp_board[index_x*3+j][index_y*3+2-j])
 
 		ans=self.get_win_move(cell_seq,flag)
 		if ans!=-1:
-			return (index_x+ans,index_y-ans)
+			return (index_x*3+ans,index_y*3+2-ans)
 
-
-
-
-
-
+		return (-1,-1)
 
 	def get_win_move(self, tup,flag):
 		if tup[0]==tup[1] and tup[2]=='-' and tup[0]==flag:
@@ -135,3 +138,26 @@ class Player21:
 		else :
 			return -1
 
+'''	def __min_val_ab(self,temp_board, depth, temp_block, flag, old_move, alpha=-(MAXX), beta=(MAXX)):	
+		if self.terminal_test(temp_board, depth, temp_block):
+			return self.__eval_state(temp_board, temp_block, flag)
+		val = (self.maxxx)
+		for act in self.get_legal_actions(temp_board,temp_block,old_move,flag):
+			successor_state = self.generate_successor(temp_board, act, flag)
+			val = min(val, self.__max_val_ab(successor_state,  depth - 1, temp_block, flag, old_move, alpha, beta))
+			if val <= alpha:
+				return val
+			beta = min(beta, val)
+		return val
+
+	def __max_val_ab(self,temp_board, depth, temp_block,flag, old_move, alpha=-(MAXX), beta=(MAXX)):
+		if self.terminal_test(temp_board, depth, temp_block):
+			return self.__eval_state(temp_board, temp_block, flag)
+		val = -(self.maxxx)
+		for act in self.get_legal_actions(temp_board,temp_block,old_move,flag):
+			successor_state = self.generate_successor(temp_board, act, flag)
+			val = max(val, self.__min_val_ab(successor_state, depth, temp_block, flag, old_move, alpha, beta))
+			if val >= beta:
+				return val
+			alpha = max(alpha, val)
+		return val'''
