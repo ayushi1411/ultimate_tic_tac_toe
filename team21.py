@@ -4,7 +4,7 @@ Ayushi Goyal 201401060
 Shreya Jain 201402230
 Class Player21 implemented using alpha beta pruning and other heuristics
 '''
-
+import copy
 class Player21:
 	def __init__(self):
 		self.WINNING_SEQUENCE=[(0,1,2),(3,4,5),(6,7,8),(0,4,8),(2,4,6),(0,3,6),(1,4,7),(2,5,8)]
@@ -18,7 +18,24 @@ class Player21:
 			return (4,4)
 
 		cells=self.get_valid_moves(temp_board,temp_block,old_move,flag)
-		return (cells[0],cells[1])
+		print cells
+		if len(cells)==1:
+			return (cells[0][0],cells[0][1])
+
+		action_values=[]
+		for action in cells:
+			successor_state = self.generate_successor(temp_board, action, flag)
+			action_values.append((action, self.__min_val_ab(successor_state, self.DEPTH, temp_block, flag, old_move)))
+
+		_, best_action_val = max(action_values, key=lambda x: x[1])
+		print "out"
+		final_choice=[]
+		for best_action,value in action_values:
+			if value==best_action_val:
+				final_choice.append(best_action)
+
+		return random.choice(final_choice)
+		#return (cells[0],cells[1])
 
 	def get_valid_moves(self,temp_board,temp_block,old_move,flag):
 		blocks=self.get_valid_blocks(temp_block,old_move)
@@ -26,7 +43,6 @@ class Player21:
 			for i in range(9):
 				if temp_block[i]=='-':
 					blocks.append(i)
-
 
 		cells=[]
 		for i in blocks:
@@ -37,14 +53,14 @@ class Player21:
 				cells.append(i)
 
 		valid_cells=[]
-		print cells
+		#print cells
 		for i in cells:
 			if i[0]!=-1 and i[1]!=-1:
 				valid_cells.append(i)
 
 		if len(valid_cells)!=0:
 			#print valid_cells
-			return (valid_cells[0][0],valid_cells[0][1])
+			return valid_cells
 
 		else:
 			cells=[]
@@ -56,7 +72,8 @@ class Player21:
 				for i in temp:
 					cells.append(i)
 
-			return (cells[0][0],cells[0][1])
+			return cells
+
 
 
 
@@ -96,6 +113,16 @@ class Player21:
 			if temp_block[i] == '-':
 				final_valid_blocks.append(i)
 		return final_valid_blocks
+
+	def get_valid_cells1(self,temp_board,i,flag):
+		index_x=i/3
+		index_y=i%3
+		#cells_seq=[]
+		cells=[]
+		for j in range (index_x*3,index_x*3+3):
+			for k in range (index_y*3,index_y*3+3):
+				if temp_board[j][k]=='-':
+					cells.append((j,k))
 
 	def get_valid_cells(self,temp_board,i,flag):
 		index_x=i/3
@@ -240,32 +267,32 @@ class Player21:
 				return False,'continue'
 			
 			else:
-	            pointplayer1 = 0
-	            pointplayer2 = 0
-	            for i in status_block:
-	                if i == 'x':
-	                    pointplayer1+=1
-	                elif i=='o':
-	                    pointplayer2+=1
+				pointplayer1 = 0
+				pointplayer2 = 0
+				for i in status_block:
+					if i == 'x':
+						pointplayer1+=1
+					elif i=='o':
+						pointplayer2+=1
 				if pointplayer1>pointplayer2:
 					return True,'P1'
 				elif pointplayer2>pointplayer1:
 					return True,'P2'
 				else:
-	                pointplayer1 = 0
-	                pointplayer2 = 0
-	                for i in range(len(game_board)):
-	                	for j in range(len(game_board[i])):
-	                    	if game_board[i][j] == 'x':
-	                        	pointplayer1+=1
-	                            elif game_board[i][j]=='o':
-	                                pointplayer2+=1
-				    if pointplayer1>pointplayer2:
+					pointplayer1 = 0
+					pointplayer2 = 0
+					for i in range(len(game_board)):
+						for j in range(len(game_board[i])):
+							if game_board[i][j] == 'x':
+								pointplayer1+=1
+							elif game_board[i][j]=='o':
+								pointplayer2+=1
+					if pointplayer1>pointplayer2:
 						return True,'P1'
-				    elif pointplayer2>pointplayer1:
-					    return True,'P2'
-	                else:
-					    return True,'D'
+					elif pointplayer2>pointplayer1:
+						return True,'P2'
+					else:
+						return True,'D'
 
 	def opponent(self,flag):
 		if flag=='x':
@@ -316,31 +343,32 @@ class Player21:
 				score=score+1
 			elif cells_seq[2]==self.opponent(flag):
 				score=score-1
+		return score
 
 	def evaluation_func(self,block_state,flag):
 		score=0
 		cells_seq=[block_state[0],block_state[1],block_state[2]]
-		score=score+get_score(cells_seq,flag)
+		score=score+self.get_score(cells_seq,flag)
 
 		cells_seq=[block_state[3],block_state[4],block_state[5]]
-		score=score+get_score(cells_seq,flag)
+		score=score+self.get_score(cells_seq,flag)
 
 		cells_seq=[block_state[6],block_state[7],block_state[8]]
-		score=score+get_score(cells_seq,flag)
+		score=score+self.get_score(cells_seq,flag)
 
 		cells_seq=[block_state[0],block_state[3],block_state[6]]
-		score=score+get_score(cells_seq,flag)
+		score=score+self.get_score(cells_seq,flag)
 
 		cells_seq=[block_state[1],block_state[4],block_state[7]]
-		score=score+get_score(cells_seq,flag)
+		score=score+self.get_score(cells_seq,flag)
 
 		cells_seq=[block_state[2],block_state[5],block_state[8]]
-		score=score+get_score(cells_seq,flag)
+		score=score+self.get_score(cells_seq,flag)
 
 		cells_seq=[block_state[0],block_state[4],block_state[8]]
-		score=score+get_score(cells_seq,flag)
+		score=score+self.get_score(cells_seq,flag)
 
 		cells_seq=[block_state[2],block_state[4],block_state[6]]
-		score=score+get_score(cells_seq,flag)
+		score=score+self.get_score(cells_seq,flag)
 
 		return score
