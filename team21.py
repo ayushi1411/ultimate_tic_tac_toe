@@ -8,8 +8,11 @@ Class Player21 implemented using alpha beta pruning and other heuristics
 class Player21:
 	def __init__(self):
 		self.WINNING_SEQUENCE=[(0,1,2),(3,4,5),(6,7,8),(0,4,8),(2,4,6),(0,3,6),(1,4,7),(2,5,8)]
+		self.DEPTH=4
+		self.maximum=9223372036854775807
 
-
+	MAXX = 9223372036854775807
+	
 	def move(self,temp_board,temp_block,old_move,flag):
 		if old_move[0]==-1 and old_move[1]==-1:
 			return (4,4)
@@ -27,33 +30,45 @@ class Player21:
 
 		cells=[]
 		for i in blocks:
-			cells.append(self.get_valid_cells(temp_board,i,flag))
+			temp=[]
+			temp=self.get_valid_cells(temp_board,i,flag)
+
+			for i in temp:
+				cells.append(i)
 
 		valid_cells=[]
+		print cells
 		for i in cells:
 			if i[0]!=-1 and i[1]!=-1:
 				valid_cells.append(i)
 
 		if len(valid_cells)!=0:
-			print valid_cells
+			#print valid_cells
 			return (valid_cells[0][0],valid_cells[0][1])
 
 		else:
 			cells=[]
+			temp=[]
+			#valid_cells=[]
 			for i in blocks:
+				temp=[]
 				temp=self.get_empty_cells(temp_board,i);
-				if temp[0]!=-1 and temp[1]!=-1:
-					return(temp)
+				for i in temp:
+					cells.append(i)
+
+			return (cells[0][0],cells[0][1])
+
 
 
 	def get_empty_cells(self,temp_board,i):
 		index_x=i/3
 		index_y=i%3
+		empty_cells=[]
 		for j in range(index_x*3,index_x*3+3):
 			for k in range(index_y*3,index_y*3+3):
 				if temp_board[j][k]=='-':
-					return (j,k)
-		return (-1,-1)
+					empty_cells.append((j,k))
+		return empty_cells
 
 	def get_valid_blocks(self,temp_block,old_move):
 		valid_blocks = []
@@ -86,6 +101,7 @@ class Player21:
 		index_x=i/3
 		index_y=i%3
 		cell_seq=[]
+		cells=[]
 		#checking rows
 		for j in range(index_x*3, index_x*3+3):
 			for k in range (index_y*3,index_y*3+3):
@@ -93,7 +109,8 @@ class Player21:
 
 			ans=self.get_win_move(cell_seq,flag)
 			if ans!=-1:
-				return (j,index_y*3+ans)
+				if (j,index_y*3+ans) not in cells:
+					cells.append((j,index_y*3+ans))
 			cell_seq=[]
 
 		#checking columns
@@ -102,7 +119,9 @@ class Player21:
 				cell_seq.append(temp_board[j][k])
 			ans=self.get_win_move(cell_seq,flag)
 			if ans!=-1:
-				return (index_x*3+ans,k)
+				if (index_x*3+ans,k) not in cells:
+					cells.append((index_x*3+ans,k))
+				#return (index_x*3+ans,k)
 			cell_seq=[]	
 
 		#checking major diagonal
@@ -111,7 +130,9 @@ class Player21:
 
 		ans=self.get_win_move(cell_seq,flag)
 		if ans!=-1:
-			return (index_x*3+ans,index_y*3+ans)
+			if (index_x*3+ans,index_y*3+ans) not in cells:
+				cells.append((index_x*3+ans,index_y*3+ans))
+		#	return (index_x*3+ans,index_y*3+ans)
 
 
 		#checking minor diagonal
@@ -121,9 +142,14 @@ class Player21:
 
 		ans=self.get_win_move(cell_seq,flag)
 		if ans!=-1:
-			return (index_x*3+ans,index_y*3+2-ans)
+			if (index_x*3+ans,index_y*3+2-ans) not in cells:
+				cells.append((index_x*3+ans,index_y*3+2-ans))
+			#return (index_x*3+ans,index_y*3+2-ans)
 
-		return (-1,-1)
+		if len(cells)!=0:
+			return cells
+
+		return [(-1,-1)]
 
 	def get_win_move(self, tup,flag):
 		if tup[0]==tup[1] and tup[2]=='-' and tup[0]==flag:
@@ -138,11 +164,18 @@ class Player21:
 		else :
 			return -1
 
-'''	def __min_val_ab(self,temp_board, depth, temp_block, flag, old_move, alpha=-(MAXX), beta=(MAXX)):	
+	def __min_val_ab(self,temp_board, depth, temp_block, flag, old_move, alpha=-(MAXX), beta=(MAXX)):	
+		score=[0]*9
 		if self.terminal_test(temp_board, depth, temp_block):
-			return self.__eval_state(temp_board, temp_block, flag)
-		val = (self.maxxx)
-		for act in self.get_legal_actions(temp_board,temp_block,old_move,flag):
+			for i in range(9):
+				block_state=[]
+				for j in range((i/3)*3,(i/3)*3+3):
+					for k in range((i%3)*3,(i%3)*3+3):
+						block_state.append(temp_board[j][k])
+				score[i]=self.evaluation_func(block_state, flag)
+
+		val = (self.maximum)
+		for act in self.get_valid_moves(temp_board,temp_block,old_move,flag):
 			successor_state = self.generate_successor(temp_board, act, flag)
 			val = min(val, self.__max_val_ab(successor_state,  depth - 1, temp_block, flag, old_move, alpha, beta))
 			if val <= alpha:
@@ -151,13 +184,163 @@ class Player21:
 		return val
 
 	def __max_val_ab(self,temp_board, depth, temp_block,flag, old_move, alpha=-(MAXX), beta=(MAXX)):
+		score=[0]*9
 		if self.terminal_test(temp_board, depth, temp_block):
-			return self.__eval_state(temp_board, temp_block, flag)
-		val = -(self.maxxx)
-		for act in self.get_legal_actions(temp_board,temp_block,old_move,flag):
+			for i in range(9):
+				block_state=[]
+				for j in range((i/3)*3,(i/3)*3+3):
+					for k in range((i%3)*3,(i%3)*3+3):
+						block_state.append(temp_board[j][k])
+				score[i]=self.evaluation_func(block_state, flag)
+
+		val = -(self.maximum)
+		for act in self.get_valid_moves(temp_board,temp_block,old_move,flag):
 			successor_state = self.generate_successor(temp_board, act, flag)
 			val = max(val, self.__min_val_ab(successor_state, depth, temp_block, flag, old_move, alpha, beta))
 			if val >= beta:
 				return val
 			alpha = max(alpha, val)
-		return val'''
+		return val
+
+
+	def terminal_test(self,temp_board, depth, temp_block):
+		if depth==0:
+			return True
+		a,msg =  self.terminal_state_reached(temp_board, temp_block)
+		return a
+
+	def generate_successor(self, temp_board, action, flag):
+		board = copy.deepcopy(temp_board)
+		board[action[0]][action[1]] = flag
+		return board
+
+	def terminal_state_reached(self,game_board, status_block):
+		
+		boardstat = status_block
+		if (boardstat[0] == boardstat[1] and boardstat[1] == boardstat[2] and boardstat[1]!='-' and boardstat[1]!='d') or (boardstat[3]!='d' and boardstat[3]!='-' and boardstat[3] == boardstat[4] and boardstat[4] == boardstat[5]) or (boardstat[6]!='d' and boardstat[6]!='-' and boardstat[6] == boardstat[7] and boardstat[7] == boardstat[8]):
+			#print block_stat
+			return True,'W'
+
+		elif (boardstat[0]!='d' and boardstat[0] == boardstat[3] and boardstat[3] == boardstat[6] and boardstat[0]!='-') or (boardstat[1]!='d'and boardstat[1] == boardstat[4] and boardstat[4] == boardstat[7] and boardstat[4]!='-') or (boardstat[2]!='d' and boardstat[2] == boardstat[5] and boardstat[5] == boardstat[8] and boardstat[5]!='-'):
+			#print block_stat
+			return True,'W'
+
+		elif (boardstat[0] == boardstat[4] and boardstat[4] == boardstat[8] and boardstat[0]!='-' and boardstat[0]!='d') or (boardstat[2] == boardstat[4] and boardstat[4] == boardstat[6] and boardstat[2]!='-' and boardstat[2]!='d'):
+			#print block_stat
+			return True,'W'
+
+		else:
+			smfl = 0
+			for i in range(9):
+				for j in range(9):
+					if game_board[i][j] == '-' and status_block[(i/3)*3+(j/3)] == '-':
+						smfl = 1
+						break
+			if smfl == 1:
+				return False,'continue'
+			
+			else:
+	            pointplayer1 = 0
+	            pointplayer2 = 0
+	            for i in status_block:
+	                if i == 'x':
+	                    pointplayer1+=1
+	                elif i=='o':
+	                    pointplayer2+=1
+				if pointplayer1>pointplayer2:
+					return True,'P1'
+				elif pointplayer2>pointplayer1:
+					return True,'P2'
+				else:
+	                pointplayer1 = 0
+	                pointplayer2 = 0
+	                for i in range(len(game_board)):
+	                	for j in range(len(game_board[i])):
+	                    	if game_board[i][j] == 'x':
+	                        	pointplayer1+=1
+	                            elif game_board[i][j]=='o':
+	                                pointplayer2+=1
+				    if pointplayer1>pointplayer2:
+						return True,'P1'
+				    elif pointplayer2>pointplayer1:
+					    return True,'P2'
+	                else:
+					    return True,'D'
+
+	def opponent(self,flag):
+		if flag=='x':
+			return 'o'
+		else :
+			return 'x'
+
+	def get_score(self,cells_seq,flag):
+		score=0
+		if (cells_seq[0]==cells_seq[1] and cells_seq[1]==cells_seq[2]):
+			if cells_seq[1]==flag:
+				score=score+100
+			elif cells_seq[1]==self.opponent(flag):
+				score=score-100
+
+		if (cells_seq[0]==cells_seq[1] and cells_seq[2]=='-'):
+			if cells_seq[1]==flag:
+				score=score+10
+			elif cells_seq[1]==self.opponent(flag):
+				score=score-10
+
+		if (cells_seq[2]==cells_seq[1] and cells_seq[0]=='-'):
+			if cells_seq[1]==flag:
+				score=score+10
+			elif cells_seq[1]==self.opponent(flag):
+				score=score-10
+
+		if (cells_seq[0]==cells_seq[2] and cells_seq[1]=='-'):
+			if cells_seq[0]==flag:
+				score=score+10
+			elif cells_seq[0]==self.opponent(flag):
+				score=score-10
+
+		if(cells_seq[1]=='-' and cells_seq[2]=='-'):
+			if cells_seq[0]==flag:
+				score=score+1
+			elif cells_seq[0]==self.opponent(flag):
+				score=score-1
+
+		if(cells_seq[0]=='-' and cells_seq[2]=='-'):
+			if cells_seq[1]==flag:
+				score=score+1
+			elif cells_seq[1]==self.opponent(flag):
+				score=score-1
+
+		if(cells_seq[1]=='-' and cells_seq[0]=='-'):
+			if cells_seq[2]==flag:
+				score=score+1
+			elif cells_seq[2]==self.opponent(flag):
+				score=score-1
+
+	def evaluation_func(self,block_state,flag):
+		score=0
+		cells_seq=[block_state[0],block_state[1],block_state[2]]
+		score=score+get_score(cells_seq,flag)
+
+		cells_seq=[block_state[3],block_state[4],block_state[5]]
+		score=score+get_score(cells_seq,flag)
+
+		cells_seq=[block_state[6],block_state[7],block_state[8]]
+		score=score+get_score(cells_seq,flag)
+
+		cells_seq=[block_state[0],block_state[3],block_state[6]]
+		score=score+get_score(cells_seq,flag)
+
+		cells_seq=[block_state[1],block_state[4],block_state[7]]
+		score=score+get_score(cells_seq,flag)
+
+		cells_seq=[block_state[2],block_state[5],block_state[8]]
+		score=score+get_score(cells_seq,flag)
+
+		cells_seq=[block_state[0],block_state[4],block_state[8]]
+		score=score+get_score(cells_seq,flag)
+
+		cells_seq=[block_state[2],block_state[4],block_state[6]]
+		score=score+get_score(cells_seq,flag)
+
+		return score
