@@ -22,6 +22,10 @@ class Player21:
 #		print cells
 		if len(cells)==1:
 			return (cells[0][0],cells[0][1])
+		if (len(cells) >=6):
+			self.DEPTH = 2
+		else:
+			self.DEPTH = 3
 
 		action_values=[]
 		for action in cells:
@@ -31,15 +35,52 @@ class Player21:
 #			print 'iamaction'
 
 		_, best_action_val = max(action_values, key=lambda x: x[1])
-		print "outmove"
-		final_choice=[]
-		for best_action,value in action_values:
-			if value==best_action_val:
-				final_choice.append(best_action)
+#		print "outmove"
+		final_choices=[]		
+		final_choices = [best_action for best_action, val in action_values if val == best_action_val]
+		i = final_choices[0]
+		x = i[0] - (i[0]%3)
+		y = i[1] - (i[1]%3)
+		arr = []
+		for j in [x,x+1,x+2]:
+			for k in [y,y+1,y+2]:
+				if temp_board[j][k] == flag:
+					arr.append(1)
+				elif temp_board[j][k] == self.opponent(flag):
+					arr.append(-1)
+				else:
+					arr.append(0)
+		loc = []
+		for i in xrange(len(arr)):
+			if arr[i] == 1:
+				self.rtup(i,arr,x,y,loc)
+		final_choices = list(set(loc).intersection(set(final_choices)))
+		if len(final_choices) == 0:
+			return random.choice([best_action for best_action, val in action_values if val == best_action_val])
+		return random.choice(final_choices)
 
-		return random.choice(final_choice)
+	def rtup(self, i, arr, sx, sy, x):
+		for j in self.WINNING_SEQUENCE:
+			if i in j:
+				var = j.index(i)
+				for k in xrange(len(j)):
+					if k != var:
+						if arr[k] == -1:
+							break
+						elif k == 2:
+							for s in xrange(len(j)):
+								if s != var:
+									v1 = sx + (s/3)
+									v2 = sy + (s%3)
+									x.append((v1,v2))
+		return		
+#		final_choice=[]
+#		for best_action,value in action_values:
+#			if value==best_action_val:
+#				final_choice.append(best_action)
+#
+#		return random.choice(final_choice)
 		#return (cells[0],cells[1])
-
 	def get_valid_moves(self,temp_board,temp_block,old_move,flag):
 		blocks=self.get_valid_blocks(temp_block,old_move)
 		if len(blocks)==0:
